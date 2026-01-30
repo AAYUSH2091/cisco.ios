@@ -76,6 +76,8 @@ class L3_interfacesArgs(object):  # pylint: disable=R0903
                         },
                         "proxy_arp": {"type": "bool"},
                         "pool": {"type": "str"},
+                        "redirects": {"type": "bool"},
+                        "unreachables": {"type": "bool"},
                         "mtu": {"type": "int"},
                         "source_interface": {
                             "type": "dict",

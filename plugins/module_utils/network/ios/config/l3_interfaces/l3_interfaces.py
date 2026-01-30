@@ -126,19 +126,19 @@ class L3_interfaces(ResourceModule):
 
         want_redirects = want.pop("redirects", None)
         have_redirects = have.pop("redirects", None)
-        self.handle_redirects(want_redirects, have_redirects, "redirects", pre_pop_want)
+        self.handle_defaults(want_redirects, have_redirects, "redirects", pre_pop_want)
 
         want_unreachables = want.pop("unreachables", None)
         have_unreachables = have.pop("unreachables", None)
-        self.handle_redirects(want_unreachables, have_unreachables, "unreachables", pre_pop_want)
+        self.handle_defaults(want_unreachables, have_unreachables, "unreachables", pre_pop_want)
 
         want_redirects = want.pop("ipv6_redirects", None)
         have_redirects = have.pop("ipv6_redirects", None)
-        self.handle_redirects(want_redirects, have_redirects, "ipv6_redirects", pre_pop_want)
+        self.handle_defaults(want_redirects, have_redirects, "ipv6_redirects", pre_pop_want)
 
         want_unreachables = want.pop("ipv6_unreachables", None)
         have_unreachables = have.pop("ipv6_unreachables", None)
-        self.handle_redirects(
+        self.handle_defaults(
             want_unreachables,
             have_unreachables,
             "ipv6_unreachables",
@@ -151,18 +151,18 @@ class L3_interfaces(ResourceModule):
         if len(self.commands) != begin:
             self.commands.insert(begin, self._tmplt.render(want or have, "name", False))
 
-    def handle_redirects(self, want_redirects, have_redirects, parser, want):
-        if want_redirects is None and have_redirects is None:
+    def handle_defaults(self, want_defaults, have_defaults, parser, want):
+        if want_defaults is None and have_defaults is None:
             if self.state == "replaced" or (self.state == "overridden" and want):
                 self.addcmd({parser: True}, parser, True)
         else:
-            if want_redirects is True and have_redirects is False:
-                self.addcmd({parser: want_redirects}, parser, not want_redirects)
-            elif want_redirects is False and have_redirects is None:
-                self.addcmd({parser: not want_redirects}, parser, not want_redirects)
-            elif want_redirects is None and have_redirects is False:
+            if want_defaults is True and have_defaults is False:
+                self.addcmd({parser: want_defaults}, parser, not want_defaults)
+            elif want_defaults is False and have_defaults is None:
+                self.addcmd({parser: not want_defaults}, parser, not want_defaults)
+            elif want_defaults is None and have_defaults is False:
                 if self.state in ["overridden", "deleted"] and not want:
-                    self.addcmd({parser: not have_redirects}, parser, have_redirects)
+                    self.addcmd({parser: not have_defaults}, parser, have_defaults)
 
     def _compare_lists(self, want, have):
         helper_address_dict_wantd = want.get("helper_addresses", {})

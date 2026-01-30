@@ -285,6 +285,7 @@ class TestIosL3InterfacesModule(TestIosModule):
                 ],
             },
         ]
+        print(result["parsed"])
         self.assertEqual(parsed_list, result["parsed"])
 
     def test_ios_l3_interfaces_rendered(self):

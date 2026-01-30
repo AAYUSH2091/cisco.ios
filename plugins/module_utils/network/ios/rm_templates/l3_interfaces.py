@@ -66,6 +66,23 @@ class L3_interfacesTemplate(NetworkTemplate):
     # fmt: off
     PARSERS = [
         {
+            "name": "autostate",
+            "getval": re.compile(r"""\s+no\s+autostate$""", re.VERBOSE),
+            "setval": "autostate",
+            "result": {"{{ name }}": {"autostate": False}},
+        },
+        {
+            "name": "mac_address",
+            "getval": re.compile(
+                r"""^\s*mac-address
+                    (\s(?P<mac_address>\S+))
+                    $""",
+                re.VERBOSE,
+            ),
+            "setval": "mac-address {{ mac_address }}",
+            "result": {"{{ name }}": {"mac_address": "{{ mac_address }}"}},
+        },
+        {
             "name": "name",
             "getval": re.compile(
                 r"""^interface
@@ -79,11 +96,113 @@ class L3_interfacesTemplate(NetworkTemplate):
             "shared": True,
         },
         {
-            "name": "autostate",
-            "getval": re.compile(r"""\s+no\s+autostate$""", re.VERBOSE),
-            "setval": "autostate",
-            "result": {"{{ name }}": {"autostate": False}},
+            "name": "helper_addresses_ipv4",
+            "getval": re.compile(
+                r"""
+                ^\s*ip\s+helper-address
+                (\s(?P<global>global))?
+                (\svrf\s(?P<vrf>\S+))?
+                \s+(?P<destination_ip>\S+)
+                \s*$
+                """,
+                re.VERBOSE,
+            ),
+            "setval": "ip helper-address "
+                      "{{ 'global ' if ipv4.global|d(False) else ''}}"
+                      "{{ 'vrf ' + ipv4.vrf|string + ' ' if ipv4.vrf is defined else ''}}"
+                      "{{ ipv4.destination_ip|string }}",
+            "compval": "ipv4",
+            "result": {
+                "{{ name }}": {
+                    "helper_addresses": {
+                        "ipv4": [{
+                            "destination_ip": "{{ destination_ip }}",
+                            "global": "{{ not not global }}",
+                            "vrf": "{{ vrf }}",
+                        }],
+                    },
+                },
+            },
         },
+        {
+            "name": "ipv4.address",
+            "getval": re.compile(
+                r"""\s+ip\saddress
+                    (\s(?P<ipv4>\S+))
+                    (\s(?P<netmask>\S+))
+                    (\s(?P<secondary>secondary))?
+                    $""",
+                re.VERBOSE,
+            ),
+            "setval": "ip address {{ ipv4.address }}"
+            "{{ ' secondary' if ipv4.secondary|d(False) else ''}}",
+            "result": {
+                "{{ name }}": {
+                    "ipv4": [
+                        {
+                            "address": "{{ ipv4 }}",
+                            "netmask": "{{ netmask }}",
+                            "secondary": "{{ True if secondary is defined }}",
+                        },
+                    ],
+                },
+            },
+        },
+        {
+            "name": "ipv4.pool",
+            "getval": re.compile(
+                r"""
+                \s+ip\saddress\spool\s(?P<pool>.+$)
+                $""", re.VERBOSE,
+            ),
+            "setval": "ip address pool {{ ipv4.pool }}",
+            "result": {
+                "{{ name }}": {
+                    "ipv4": [
+                        {
+                            "pool": "{{ pool }}",
+                        },
+                    ],
+                },
+            },
+        },
+        {
+            "name": "ipv4.mtu",
+            "getval": re.compile(
+                r"""
+                \s+ip\smtu\s(?P<mtu>\d+)
+                $""", re.VERBOSE,
+            ),
+            "setval": "ip mtu {{ ipv4.mtu }}",
+            "result": {
+                "{{ name }}": {
+                    "ipv4": [
+                        {
+                            "mtu": "{{ mtu }}",
+                        },
+                    ],
+                },
+            },
+        },
+        {
+            "name": "ipv4.redirects",
+            "getval": re.compile(
+                r"""
+                \s+ip\sredirects
+                $""", re.VERBOSE,
+            ),
+            "setval": "ip redirects",
+            "result": {
+                "{{ name }}": {
+                    "ipv4": [
+                        {
+                            "redirects": True,
+                        },
+                    ],
+                },
+            },
+        },
+
         {
             "name": "redirects",
             "getval": re.compile(
@@ -199,100 +318,18 @@ class L3_interfacesTemplate(NetworkTemplate):
             },
         },
         {
-            "name": "mac_address",
-            "getval": re.compile(
-                r"""^\s*mac-address
-                    (\s(?P<mac_address>\S+))
-                    $""",
-                re.VERBOSE,
-            ),
-            "setval": "mac-address {{ mac_address }}",
-            "result": {"{{ name }}": {"mac_address": "{{ mac_address }}"}},
-        },
-        {
-            "name": "helper_addresses_ipv4",
+            "name": "ipv4.unreachables",
             "getval": re.compile(
                 r"""
-                ^\s*ip\s+helper-address
-                (\s(?P<global>global))?
-                (\svrf\s(?P<vrf>\S+))?
-                \s+(?P<destination_ip>\S+)
-                \s*$
-                """,
-                re.VERBOSE,
-            ),
-            "setval": "ip helper-address "
-                      "{{ 'global ' if ipv4.global|d(False) else ''}}"
-                      "{{ 'vrf ' + ipv4.vrf|string + ' ' if ipv4.vrf is defined else ''}}"
-                      "{{ ipv4.destination_ip|string }}",
-            "compval": "ipv4",
-            "result": {
-                "{{ name }}": {
-                    "helper_addresses": {
-                        "ipv4": [{
-                            "destination_ip": "{{ destination_ip }}",
-                            "global": "{{ not not global }}",
-                            "vrf": "{{ vrf }}",
-                        }],
-                    },
-                },
-            },
-        },
-        {
-            "name": "ipv4.address",
-            "getval": re.compile(
-                r"""\s+ip\saddress
-                    (\s(?P<ipv4>\S+))
-                    (\s(?P<netmask>\S+))
-                    (\s(?P<secondary>secondary))?
-                    $""",
-                re.VERBOSE,
-            ),
-            "setval": "ip address {{ ipv4.address }}"
-            "{{ ' secondary' if ipv4.secondary|d(False) else ''}}",
-            "result": {
-                "{{ name }}": {
-                    "ipv4": [
-                        {
-                            "address": "{{ ipv4 }}",
-                            "netmask": "{{ netmask }}",
-                            "secondary": "{{ True if secondary is defined }}",
-                        },
-                    ],
-                },
-            },
-        },
-        {
-            "name": "ipv4.pool",
-            "getval": re.compile(
-                r"""
-                \s+ip\saddress\spool\s(?P<pool>.+$)
+                \s+ip\sunreachables
                 $""", re.VERBOSE,
             ),
-            "setval": "ip address pool {{ ipv4.pool }}",
+            "setval": "ip unreachables",
             "result": {
                 "{{ name }}": {
                     "ipv4": [
                         {
-                            "pool": "{{ pool }}",
-                        },
-                    ],
-                },
-            },
-        },
-        {
-            "name": "ipv4.mtu",
-            "getval": re.compile(
-                r"""
-                \s+ip\smtu\s(?P<mtu>\d+)
-                $""", re.VERBOSE,
-            ),
-            "setval": "ip mtu {{ ipv4.mtu }}",
-            "result": {
-                "{{ name }}": {
-                    "ipv4": [
-                        {
-                            "mtu": "{{ mtu }}",
+                            "unreachables": True,
                         },
                     ],
                 },
