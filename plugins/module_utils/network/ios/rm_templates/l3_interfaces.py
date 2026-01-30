@@ -287,7 +287,6 @@ class L3_interfacesTemplate(NetworkTemplate):
                 },
             },
         },
-        # IPv6 unreachables - explicit enabled
         {
             "name": "ipv6_unreachables",
             "getval": re.compile(
@@ -302,7 +301,6 @@ class L3_interfacesTemplate(NetworkTemplate):
                 },
             },
         },
-        # IPv6 unreachables - explicit disabled
         {
             "name": "no_ipv6_unreachables",
             "getval": re.compile(
