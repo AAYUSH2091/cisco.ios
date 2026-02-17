@@ -478,8 +478,7 @@ def check_args(module, warnings):
 
 
 def edit_config_or_macro(connection, commands, config_prompt_lines):
-    # only catch the macro configuration command,
-    # not negated 'no' variation.
+
     if commands[0].startswith("macro name"):
         connection.edit_macro(candidate=commands)
     else:
@@ -492,7 +491,7 @@ def edit_config_or_macro(connection, commands, config_prompt_lines):
 def get_candidate_config(module):
     candidate = ""
     if module.params["content"]:
-        # Use the pre-rendered content directly
+
         candidate = module.params["content"]
     elif module.params["src"]:
         candidate = module.params["src"]
@@ -541,7 +540,7 @@ def main():
     )
     argument_spec = dict(
         src=dict(type="str"),
-        content=dict(type="str"),  # NEW PARAMETER
+        content=dict(type="str"),
         lines=dict(aliases=["commands"], type="list", elements="raw", options=line_spec),
         parents=dict(type="list", elements="str"),
         before=dict(type="list", elements="str"),
@@ -560,10 +559,10 @@ def main():
     )
     mutually_exclusive = [
         ("lines", "src"),
-        ("lines", "content"),  # NEW: content is mutually exclusive with lines
+        ("lines", "content"),
         ("parents", "src"),
-        ("parents", "content"),  # NEW: content is mutually exclusive with parents
-        ("src", "content"),  # NEW: content is mutually exclusive with src
+        ("parents", "content"),
+        ("src", "content"),
     ]
     required_if = [
         ("match", "strict", ["lines", "src", "content"], True),
@@ -620,8 +619,6 @@ def main():
             result["updates"] = commands
             result["banners"] = banner_diff
 
-            # send the configuration commands to the device and merge
-            # them with the current running config
             if not module.check_mode:
                 if commands:
                     configs = []
@@ -635,7 +632,7 @@ def main():
                                     ):
                                         before_commands = {
                                             "config_line": command,
-                                        }  # add before commands as dictonary type to config lines
+                                        }
                                         configs[:0].append(before_commands)
                                     if (
                                         module.params["parents"]
@@ -678,7 +675,6 @@ def main():
         else:
             contents = running_config
 
-        # recreate the object in order to process diff_ignore_lines
         running_config = NetworkConfig(indent=1, contents=contents, ignore_lines=diff_ignore_lines)
         if module.params["diff_against"] == "running":
             if module.check_mode:
