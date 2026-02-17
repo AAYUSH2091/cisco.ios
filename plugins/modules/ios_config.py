@@ -708,7 +708,9 @@ def main():
                     {"changed": True, "diff": {"before": str(before), "after": str(after)}},
                 )
 
-    if result.get("changed") and any((module.params["src"], module.params["lines"], module.params["content"])):
+    if result.get("changed") and any(
+        (module.params["src"], module.params["lines"], module.params["content"])
+    ):
         msg = (
             "To ensure idempotency and correct diff the input configuration lines should be"
             " similar to how they appear if present in"
