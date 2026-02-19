@@ -93,7 +93,6 @@ options:
       - This argument is mutually exclusive with I(src), I(lines), and I(parents).
       - 'Example: C(content: "{{ lookup(''ansible.builtin.template'', ''config.j2'') }}")'
     type: str
-    version_added: 7.0.0
   before:
     description:
       - The ordered set of commands to push on to the command stack if a change needs
